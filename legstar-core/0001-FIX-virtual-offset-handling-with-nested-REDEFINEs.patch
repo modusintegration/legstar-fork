@@ -1,0 +1,58 @@
+From 0f2cf354c5596fda0ef0b04bbe2e924e16e76133 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ramiro=20Gonz=C3=A1lez=20Maciel?=
+ <ramiro@snoopconsulting.com>
+Date: Thu, 18 Dec 2014 13:06:58 -0300
+Subject: [PATCH] FIX virtual offset handling with nested REDEFINEs
+
+---
+ .../src/main/java/com/legstar/coxb/CobolElementVisitor.java | 13 +++++++++++++
+ .../com/legstar/coxb/impl/visitor/CobolMarshalVisitor.java  |  4 ++--
+ 2 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/legstar-core/legstar-coxbapi/src/main/java/com/legstar/coxb/CobolElementVisitor.java b/legstar-core/legstar-coxbapi/src/main/java/com/legstar/coxb/CobolElementVisitor.java
+index 8ac7d9e..5d89e17 100644
+--- a/legstar-core/legstar-coxbapi/src/main/java/com/legstar/coxb/CobolElementVisitor.java
++++ b/legstar-core/legstar-coxbapi/src/main/java/com/legstar/coxb/CobolElementVisitor.java
+@@ -377,6 +377,19 @@ public abstract class CobolElementVisitor {
+     }
+ 
+     /**
++     * Non destructive version of getStartOffset.
++     * It doesn't modify the virtual filler length
++     * @return
++     */
++    public int getCurrentStartOffset() {
++        int startOffset = getOffset();
++        if (getVirtualFillerLength() > 0) {
++            startOffset += getVirtualFillerLength();
++        }
++        return startOffset;
++    }
++    
++    /**
+      * @return the length that needs to be added to the last offset to account
+      *         for a previous item that processed less bytes than it should
+      *         have.
+diff --git a/legstar-core/legstar-coxbrt/src/main/java/com/legstar/coxb/impl/visitor/CobolMarshalVisitor.java b/legstar-core/legstar-coxbrt/src/main/java/com/legstar/coxb/impl/visitor/CobolMarshalVisitor.java
+index 1c5f886..3f7ca0d 100644
+--- a/legstar-core/legstar-coxbrt/src/main/java/com/legstar/coxb/impl/visitor/CobolMarshalVisitor.java
++++ b/legstar-core/legstar-coxbrt/src/main/java/com/legstar/coxb/impl/visitor/CobolMarshalVisitor.java
+@@ -185,13 +185,13 @@ public class CobolMarshalVisitor extends CobolElementVisitor {
+                  */
+                 if (alt.isSet()) {
+                     /* Save the visitor offset context */
+-                    int savedOffset = getStartOffset();
++                    int savedOffset = getCurrentStartOffset();
+                     alt.accept(this);
+                     /*
+                      * If offset was succesfully incremented, we consider we
+                      * found a valid alternative, just get out of the loop.
+                      */
+-                    if (savedOffset < getStartOffset()) {
++                    if (savedOffset < getCurrentStartOffset()) {
+                         chosenAlternative = alt;
+                         break;
+                     }
+-- 
+1.9.3
+

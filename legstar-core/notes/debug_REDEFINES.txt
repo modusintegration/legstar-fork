@@ -1,0 +1,45 @@
+    public void visit(final ICobolChoiceBinding ce) throws HostException {
+    	cuando ce = recurringinputchoicebinding, deja virtualFiller en 819
+
+    	pops to 
+    	 public void visit(final ICobolComplexBinding ce) throws HostException {
+    	 	con ce = mrchcriteriabinding
+    	 	en el for que marshalea los hijos
+
+    	 el visitor sigue con virtualbuffer en 819
+
+
+    	 pops a
+    	 public void visit(final ICobolChoiceBinding ce) throws HostException {
+
+    	 con ce = inputareachoicebinding
+
+    	 acá sigue con el con virtualbuffer en 819
+
+    	 	en este nivel mueve el vb a startoffset, queda startoffset en 912 que es lo correcto
+    	 	marca como elegida la mrchcriteria
+
+    	 	pops to
+    	 	public void visit(final ICobolComplexBinding ce) throws HostException {
+
+    	 		con ce = pgmarea
+    	 		y acá quedó el virtualbuffer en 0 y el mOffset en 93.
+    	 		Un paso antes es
+
+
+al final del visit(choice) no sé por qué no pasa el virtualbuffer al startoffset
+
+puedo probar cambiando en CobolMarshalVisitor, linea 186:
+                    /* Save the visitor offset context */
+                    int savedOffset = getStartOffset();
+                    alt.accept(this);
+                    /*
+                     * If offset was succesfully incremented, we consider we
+                     * found a valid alternative, just get out of the loop.
+                     */
+                    if (savedOffset < getStartOffset()) {
+                        chosenAlternative = alt;
+                        break;
+                    }
+
+las llamadas al getStartOffset() por uno que no borre el virtual offset, total acá solamente está calculando si se movió o no, no necesita setearlo en 0
