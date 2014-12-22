@@ -6,7 +6,9 @@ Forked legstar project
 We mainly use the "core" packages, so usually it's enough to do:
 
 cd legstar-core
+
 mvn install
+
 
 and then update your poms to use the current version.
 
