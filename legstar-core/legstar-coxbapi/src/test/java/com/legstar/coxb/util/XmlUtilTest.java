@@ -43,8 +43,18 @@ public class XmlUtilTest extends TestCase {
                         + "<ComComment>A VOIR</ComComment>" + "</Dfhcommarea>");
         Source source = new StreamSource(reader);
         String result = XmlUtil.prettyPrint(source);
-        assertEquals(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        
+        //FIXED the assertEquals fails because it behaves differently in JDK6 and JDK7.
+        //JDK 6 generates <?xml version=\"1.0\" encoding=\"UTF-8\"?>" + LINE_SEPARATOR + "<Dfhcommarea xmlns=\"http://legstar.com/test/coxb/lsfileae\">"
+        //JDK 7 generates <?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "<Dfhcommarea xmlns=\"http://legstar.com/test/coxb/lsfileae\">"
+        //So no line separator on JDK 7 :/
+        //Now this means XmlUtil will generate different prettyPrinted XML in JDK6 and JDK7. Hopefully it won't break anything ( doesn't break the tests currently )
+        
+        
+        assertTrue(
+        		"Stream not drained as expected, got back: " + result,
+        		//JDK 6
+                ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                         + LINE_SEPARATOR
                         + "<Dfhcommarea xmlns=\"http://legstar.com/test/coxb/lsfileae\">"
                         + LINE_SEPARATOR + "  <ComNumber>100</ComNumber>"
@@ -56,7 +66,22 @@ public class XmlUtilTest extends TestCase {
                         + "  <ComDate>100458</ComDate>" + LINE_SEPARATOR
                         + "  <ComAmount>00100.35</ComAmount>" + LINE_SEPARATOR
                         + "  <ComComment>A VOIR</ComComment>" + LINE_SEPARATOR
-                        + "</Dfhcommarea>" + LINE_SEPARATOR, result);
+                        + "</Dfhcommarea>" + LINE_SEPARATOR).equals(result) 
+				||
+				//JDK 7
+				("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+				+ "<Dfhcommarea xmlns=\"http://legstar.com/test/coxb/lsfileae\">"
+				+ LINE_SEPARATOR + "  <ComNumber>100</ComNumber>"
+				+ LINE_SEPARATOR + "  <ComPersonal>" + LINE_SEPARATOR
+				+ "    <ComName>TOTO</ComName>" + LINE_SEPARATOR
+				+ "    <ComAddress>LABAS STREET</ComAddress>"
+				+ LINE_SEPARATOR + "    <ComPhone>88993314</ComPhone>"
+				+ LINE_SEPARATOR + "  </ComPersonal>" + LINE_SEPARATOR
+				+ "  <ComDate>100458</ComDate>" + LINE_SEPARATOR
+				+ "  <ComAmount>00100.35</ComAmount>" + LINE_SEPARATOR
+				+ "  <ComComment>A VOIR</ComComment>" + LINE_SEPARATOR
+				+ "</Dfhcommarea>" + LINE_SEPARATOR).equals(result) 
+				);
         result = XmlUtil.prettyPrint(source);
         assertTrue(result.equals("java.io.IOException: Stream closed"));
     }
